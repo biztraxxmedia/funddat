@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="description" content="FundDat — unlisted local deal tracker. Not a client site.">
+  <title>FundDat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Oswald:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #100e0c;
+      --bg-soft: #181512;
+      --card: #1d1a16;
+      --card-hover: #221e19;
+      --line: #3a332a;
+      --gold: #e8c07a;
+      --gold-dim: #c9a25a;
+      --text: #f6f1e8;
+      --muted: #b4aa9a;
+      --fine: #8f8678;
+      --done: #3dba7a;
+      --ready: #e8c07a;
+      --progress: #7eb0ff;
+      --waiting: #c9a0ff;
+      --held: #9aa3b2;
+      --idea: #5ecfc0;
+      --confirm: #ff9f4a;
+      --danger-bg: rgba(255, 159, 74, .12);
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+    body {
+      font-family: "Source Sans 3", system-ui, sans-serif;
+      font-size: 17px;
+      line-height: 1.45;
+      min-height: 100vh;
+    }
+    a { color: var(--gold); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: #f3d8a4; }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 20px 16px 64px; }
+    header.top {
+      background:
+        radial-gradient(1200px 280px at 10% -40%, rgba(232,192,122,.18), transparent 60%),
+        linear-gradient(180deg, #1a1612 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--line);
+      padding: 28px 0 8px;
+    }
+    .eyebrow {
+      font-size: .78rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+    h1.wordmark {
+      font-family: Fraunces, Georgia, serif;
+      font-size: clamp(2.6rem, 9vw, 4rem);
+      line-height: .95;
+      margin: 0 0 10px;
+      font-weight: 700;
+      letter-spacing: -.03em;
+    }
+    h1.wordmark span { color: var(--gold); }
+    .lede { color: var(--muted); margin: 0 0 18px; max-width: 38rem; }
+    .goals {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin: 18px 0 8px;
+    }
+    @media (min-width: 700px) {
+      .goals { grid-template-columns: repeat(3, 1fr); }
+    }
+    .goal {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+    .goal h2 {
+      margin: 0 0 4px;
+      font-size: .72rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .goal p { margin: 0; font-weight: 700; font-size: 1.05rem; }
+    .goal .fine { font-weight: 500; color: var(--muted); font-size: .88rem; display: block; margin-top: 4px; }
+    .next {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--gold);
+      border-radius: var(--radius);
+      padding: 18px 18px 10px;
+      margin: 22px 0 24px;
+      box-shadow: var(--shadow);
+    }
+    .next h2 {
+      font-family: Oswald, sans-serif;
+      font-size: 1.35rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin: 0 0 12px;
+    }
+    .next ol { margin: 0; padding: 0 0 0 1.2rem; }
+    .next li { margin: 0 0 12px; }
+    .next li strong { display: block; font-size: 1.02rem; }
+    .next li span { display: block; color: var(--muted); font-size: .92rem; font-weight: 400; }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 18px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: rgba(16,14,12,.92);
+      backdrop-filter: blur(8px);
+      padding: 10px 0;
+    }
+    .filters button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--bg-soft);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font: 650 13px/1 "Source Sans 3", system-ui, sans-serif;
+      cursor: pointer;
+    }
+    .filters button[aria-pressed="true"] {
+      background: var(--gold);
+      color: #1a140c;
+      border-color: var(--gold);
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px 18px 16px;
+      margin: 0 0 16px;
+      box-shadow: var(--shadow);
+    }
+    .card-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .biz-name {
+      font-family: Oswald, Impact, sans-serif;
+      font-size: clamp(1.55rem, 6vw, 2.05rem);
+      line-height: 1.05;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      margin: 0;
+      flex: 1 1 220px;
+    }
+    .also, .meta, .name-note {
+      color: var(--muted);
+      font-size: .92rem;
+      margin: 0 0 4px;
+    }
+    .name-note { color: var(--confirm); font-weight: 600; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      border: 1px solid currentColor;
+      white-space: nowrap;
+    }
+    .chip.done { color: var(--done); background: rgba(61,186,122,.12); }
+    .chip.ready { color: var(--ready); background: rgba(232,192,122,.14); }
+    .chip.progress { color: var(--progress); background: rgba(126,176,255,.12); }
+    .chip.waiting { color: var(--waiting); background: rgba(201,160,255,.12); }
+    .chip.held { color: var(--held); background: rgba(154,163,178,.12); }
+    .chip.idea { color: var(--idea); background: rgba(94,207,192,.12); }
+    .chip.confirm { color: var(--confirm); background: var(--danger-bg); }
+    .key {
+      margin: 14px 0 8px;
+      padding: 12px 14px;
+      background: var(--bg-soft);
+      border-radius: 12px;
+      border: 1px solid var(--line);
+    }
+    .key p { margin: 0 0 8px; }
+    .key p:last-child { margin-bottom: 0; }
+    .key strong { font-weight: 700; }
+    .section-label {
+      margin: 14px 0 6px;
+      font-size: .72rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      font-weight: 700;
+    }
+    .made, .notes, .confirms { margin: 0; padding: 0 0 0 1.15rem; color: var(--muted); font-size: .92rem; }
+    .made li, .notes li, .confirms li { margin: 0 0 6px; }
+    .confirms { color: #f0c49a; }
+    .links { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 4px; }
+    .links a {
+      display: inline-block;
+      background: #2a241c;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 11px;
+      font-size: .86rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--gold);
+    }
+    .links a:hover { border-color: var(--gold); }
+    .thumbs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0 6px;
+      margin: 4px 0 8px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .thumbs button {
+      flex: 0 0 auto;
+      width: 112px;
+      height: 112px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #111;
+      cursor: pointer;
+    }
+    .thumbs button img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .thumbs button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .pronounce {
+      margin: 12px 0 0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(232,192,122,.1);
+      border: 1px solid rgba(232,192,122,.35);
+      font-size: .95rem;
+    }
+    .pronounce strong { color: var(--gold); }
+    .ideas { margin-top: 36px; }
+    .ideas h2 {
+      font-family: Oswald, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      font-size: 1.5rem;
+      margin: 0 0 6px;
+    }
+    .ideas .lede { margin-bottom: 14px; }
+    .idea-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin: 0 0 10px;
+    }
+    .idea-card h3 { margin: 0 0 4px; font-size: 1.08rem; }
+    .idea-card p { margin: 0; color: var(--muted); font-size: .92rem; }
+    .idea-card .price { color: var(--text); font-weight: 700; display: block; margin-top: 6px; font-size: .95rem; }
+    footer {
+      margin-top: 36px;
+      color: var(--fine);
+      font-size: .86rem;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+    }
+    /* Lightbox */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.88);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 16px;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox figure { margin: 0; max-width: min(96vw, 900px); max-height: 92vh; text-align: center; }
+    .lightbox img {
+      max-width: 96vw;
+      max-height: 82vh;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.5);
+    }
+    .lightbox figcaption { color: #ddd; margin-top: 10px; font-size: .92rem; }
+    .lightbox .close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 999px;
+      background: #1c1c1c;
+      color: #fff;
+      font-size: 28px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    body.lb-open { overflow: hidden; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <p class="eyebrow">BizTraxx · Unlisted crew page</p>
+      <h1 class="wordmark">Fund<span>Dat</span></h1>
+      <p class="lede">Every local deal and what still needs to happen to get paid. Built to open on a phone, tablet, or laptop. Area: Columbia, Russell County / Russell Springs, and Campbellsville, KY.</p>
+      <div class="goals">
+        <div class="goal">
+          <h2>Bills</h2>
+          <p>Keep current bills funded</p>
+        </div>
+        <div class="goal">
+          <h2>Subscriptions</h2>
+          <p>Cover the tools that make the work</p>
+        </div>
+        <div class="goal">
+          <h2>Move fund</h2>
+          <p>$100–$200 needed</p>
+          <span class="fine">About 1½ weeks · Campbellsville, KY</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="next" aria-labelledby="next-up">
+      <h2 id="next-up">Next up</h2>
+      <ol id="next-list"></ol>
+    </section>
+
+    <div class="filters" id="filters" role="toolbar" aria-label="Filter by status"></div>
+    <div id="cards"></div>
+
+    <section class="ideas" aria-labelledby="ideas-title">
+      <h2 id="ideas-title">Media ideas to pitch</h2>
+      <p class="lede">Repeatable offers based on work already built. Typical local range is $40–$100, about $80 max. Don’t invent a price on the fly — confirm before quoting.</p>
+      <div id="ideas"></div>
+    </section>
+
+    <footer>
+      <p>Unlisted tracker for the crew only — not a client-facing site. Search engines are asked not to index this page. Last updated Saturday, Nov 21, 2026 (America/Chicago).</p>
+    </footer>
+  </main>
+
+  <div class="lightbox" id="lightbox" hidden>
+    <button class="close" type="button" id="lb-close" aria-label="Close photo">×</button>
+    <figure>
+      <img id="lb-img" alt="">
+      <figcaption id="lb-cap"></figcaption>
+    </figure>
+  </div>
+
+  <script>
+    /* ============================================================
+       FundDat data — edit this array to add or update businesses.
+       status: done | ready | progress | waiting | held | idea | confirm
+       images: { src, thumb, alt, caption } files live in assets/img/
+       ============================================================ */
+    const NEXT_UP = [
+      {
+        title: "Monday morning — Anchor Dealer Solutions holiday set",
+        detail: "Pitch Jeff the $40 holiday set. Reminder is set for Sunday 5 PM CT."
+      },
+      {
+        title: "Hanyzewski Furniture — build and pitch the ~$80 package",
+        detail: "Ryan Hanyzewski, with his dad. Pays via Cash App. Earlier work is in Claude. Store name still needs a confirm."
+      },
+      {
+        title: "Triple combo — Black Stallion, Happy Cow Café, and BYO Bowl",
+        detail: "One owner already bought commercial music, but never got commercials or sites. Pitch commercials plus sites."
+      },
+      {
+        title: "Still on the table — Inner Wisdom, Betty’s Country Cooking, and CarSmart",
+        detail: "Each has work started. Confirm price and close the pitch."
+      },
+      {
+        title: "Dog Gone Classy — push Chomper Treat Boxes online",
+        detail: "Brad’s commercials and showcase are done. Next is selling the treat boxes online."
+      },
+      {
+        title: "Optional — Christmas refresh texts (yes by Tue, Nov 24)",
+        detail: "Draft $50 refresh / $75 Christmas + New Year offer for past clients. Nothing has been sent yet."
+      }
+    ];
+
+    const BUSINESSES = [
+      {
+        id: "anchor",
+        name: "Anchor Auto Sales",
+        also: "Also: Anchor Dealer Solutions · Anchored in Automotive",
+        contact: "Jeff & Kim",
+        area: "Russell Springs, KY",
+        status: "ready",
+        featured: true,
+        price: "$40 Dealer Solutions holiday set (Monday pitch). Other amounts TBD.",
+        next: "Pitch the $40 Anchor Dealer Solutions holiday set Monday morning.",
+        made: [
+          "Holiday pack is done: 7 flyers, 7 QR codes, 7 songs, and 7 videos (leaves, fireworks, snow, and the rest matched to each holiday).",
+          "Showcase page is live with the holiday videos plus commercials: 80s, On the Moon, Pixel, Quality Used, Fair Prices, and the on-hold mic spot. Weatherman radio spot and the jingle are on there too.",
+          "Auto sales site, Dealer Solutions landing, and Anchored in Automotive podcast page are live."
+        ],
+        links: [
+          { label: "Holiday showcase", href: "https://biztraxxmedia.github.io/anchor-auto-showcase/" },
+          { label: "Auto sales (GitHub)", href: "https://biztraxxmedia.github.io/anchor-auto-sales/" },
+          { label: "Dealer Solutions (GitHub)", href: "https://biztraxxmedia.github.io/anchor-dealer-solutions/" },
+          { label: "anchorauto270.netlify.app", href: "https://anchorauto270.netlify.app/" },
+          { label: "anchordealer270.netlify.app", href: "https://anchordealer270.netlify.app/" },
+          { label: "anchordealersolutions.netlify.app", href: "https://anchordealersolutions.netlify.app/" }
+        ],
+        notes: [
+          "Call buttons on the Dealer Solutions landing are hidden until a phone number exists.",
+          "The misnamed “Space Commercial” was left off the showcase — it was a Dealer Solutions graphic with the wrong address."
+        ],
+        confirm: [
+          "Confirm Jeff owns anchordealersolutions.com.",
+          "Still need the Dealer Solutions phone number.",
+          "Fall Deals radio audio is still an open item."
+        ]
+      },
+      {
+        id: "hanyzewski",
+        name: "Hanyzewski Furniture",
+        nameNote: "name: confirm",
+        contact: "Ryan Hanyzewski, with his dad",
+        area: "Confirm town — still in the Columbia / Russell County / Campbellsville area",
+        status: "ready",
+        featured: true,
+        price: "About $80 package. Pays via Cash App.",
+        next: "Build and pitch the ~$80 package from the earlier Claude work.",
+        made: [
+          "Earlier work is in Claude.",
+          "Ready to pitch / build."
+        ],
+        pronounce: "Pronounced anna-ZUS-ky (for Audiboi jingles; he hates when people get it wrong).",
+        confirm: [
+          "Confirm the store name: Hanyzewski Furniture is almost certain, but not locked.",
+          "Confirm the exact town if it isn’t already in the Claude work."
+        ],
+        images: [
+          {
+            src: "assets/img/hanyzewski-facebook.jpg",
+            thumb: "assets/img/hanyzewski-facebook-thumb.jpg",
+            alt: "Screenshot of Ryan Hanyzewski’s Facebook profile",
+            caption: "Ryan Hanyzewski — Facebook profile"
+          }
+        ]
+      },
+      {
+        id: "triple",
+        name: "Black Stallion, Happy Cow Café & BYO Bowl",
+        also: "Triple combo — one owner. BYO is Build Your Own Bowl.",
+        contact: "One owner (name: confirm)",
+        area: "Columbia / Russell County area — confirm exact locations",
+        status: "ready",
+        featured: true,
+        price: "TBD. Typical local package is about $80 max. Confirm before quoting.",
+        next: "Pitch commercials plus sites. He already bought commercial music, but never got commercials or sites.",
+        made: [
+          "Commercial music was already purchased.",
+          "Draft HTML pages for Black Stallion Steakhouse, Happy Cow Café, and BYO Express exist in the older BizTraxx site pack. They were not delivered or made live."
+        ],
+        notes: [
+          "Use the existing drafts as a starting point only after confirming they should be the ones we pitch."
+        ],
+        confirm: [
+          "Owner’s name.",
+          "Whether the old HTML drafts should be the starting point.",
+          "Price for commercials + sites (three businesses)."
+        ]
+      },
+      {
+        id: "inner-wisdom",
+        name: "Inner Wisdom",
+        also: "DJ visuals pack for Rhavin",
+        contact: "Rhavin",
+        area: "Local / DJ work",
+        status: "progress",
+        featured: true,
+        price: "TBD — confirm before pitching.",
+        next: "Finish the landscape loop pack (~10 loops) and pitch it.",
+        made: [
+          "Visual loop pack is in progress: Loop 01 is underway, loops 2–10 are planned.",
+          "Logo is on file. Pack is for local review only so far — not published."
+        ],
+        notes: [
+          "Go-to layout is logo in the center. If important action is in the middle, move the logo to the side instead.",
+          "1080p landscape, 16:9, riddim / wonky / robotic / trippy. Any colors except girly ones."
+        ],
+        confirm: ["Price for the loop pack."]
+      },
+      {
+        id: "bettys",
+        name: "Betty’s Country Cooking",
+        contact: "Betty’s",
+        area: "Columbia / Russell County area",
+        status: "ready",
+        featured: true,
+        price: "TBD. An earlier target of about $60 was discussed — confirm, do not treat as a quote.",
+        next: "Pitch the live site and package. Still on the table.",
+        made: [
+          "Site is live (v6).",
+          "A marketing kit exists. An older v3 site at bettys270 is retired and replaced by the current one."
+        ],
+        links: [
+          { label: "bettyscountrycooking.netlify.app", href: "https://bettyscountrycooking.netlify.app/" }
+        ],
+        notes: [
+          "A Christmas refresh draft was held because the original pitch is still pending."
+        ],
+        confirm: ["Confirm the price before pitching.", "Confirm the pitch is still wanted this week."]
+      },
+      {
+        id: "carsmart",
+        name: "CarSmart",
+        area: "Closer by (Columbia / Russell County area)",
+        status: "ready",
+        featured: true,
+        price: "TBD — confirm before pitching.",
+        next: "Show the site and the 18-second commercial and close the sale. Still on the table.",
+        made: [
+          "Commercial music is already done — no new song needed.",
+          "Two 18-second commercials exist (v1 and v2).",
+          "A site was built (carsmart-fixed.html)."
+        ],
+        confirm: ["Live URL, if any.", "Price.", "Whether this has been shown yet."]
+      },
+      {
+        id: "dgc",
+        name: "Dog Gone Classy",
+        also: "Combined package with Thriller Miller Racing 46",
+        contact: "Brad Miller",
+        area: "Local",
+        status: "progress",
+        featured: true,
+        price: "Service price TBD. An older loyalty-hookup target of $90 was discussed — confirm, do not treat as owed.",
+        next: "Push Chomper Treat Boxes online, including product videos.",
+        made: [
+          "Both sites are live.",
+          "Commercials and a showcase are done.",
+          "Combined client package already exists for both businesses."
+        ],
+        links: [
+          { label: "doggoneclassy.netlify.app", href: "https://doggoneclassy.netlify.app/" },
+          { label: "thrillermillerracing46.netlify.app", href: "https://thrillermillerracing46.netlify.app/" },
+          { label: "Client showcase", href: "https://biztraxxmedia.github.io/showcase/" }
+        ],
+        notes: [
+          "Chomper Treat Box shop prices (the product, not a service fee): Original $60, Puppy Teething $35, Tough Chewer $40, Heavy Chewer $40.",
+          "Shop also sells branded tumblers, hats and bottles, leashes, harnesses, toys, pet clothes, $1.50 tennis balls, and $2 poop bag holders.",
+          "Thriller Miller Racing 46 QR / video work points at YouTube @chubbyguycustomz."
+        ],
+        confirm: ["Service price for the online product push, if any."]
+      },
+      {
+        id: "js",
+        name: "J&S Auto Sales",
+        status: "done",
+        price: "Sold and paid. Job complete. Amount not logged here.",
+        next: "Nothing required to get paid. Optional leftover: switch the finance-form notification email from John to Madison.",
+        made: [
+          "Site is live.",
+          "Holiday pack was built."
+        ],
+        links: [
+          { label: "jsautosales.netlify.app", href: "https://jsautosales.netlify.app/" }
+        ],
+        notes: [
+          "This is the one clearly marked sold, paid, and complete."
+        ],
+        confirm: ["Optional: confirm the Madison email switch if that still needs doing."]
+      },
+      {
+        id: "oopsie",
+        name: "Oopsie Daisy Plant Shop",
+        area: "Local",
+        status: "waiting",
+        price: "TBD — sale status not confirmed as paid.",
+        next: "Confirm whether the sale is closed. Get the owner’s email for the plant-match form. The commercial is ready and stays off the site unless asked.",
+        made: [
+          "Site is live, including an Events tab, event-space amenities, and a plant-question form.",
+          "Sung jingle vertical commercial (v1) is done. It is not on the site unless asked."
+        ],
+        links: [
+          { label: "oopsiedaisyplantshop.netlify.app", href: "https://oopsiedaisyplantshop.netlify.app/" }
+        ],
+        notes: [
+          "The older oopsiedaisy.netlify.app is on a different account and was not updated. oopsie-daisy.netlify.app (Cane Creek) was not touched.",
+          "Hours on the site: Tue–Fri 10–5, Sat 10–4 — worth a quick confirm."
+        ],
+        confirm: [
+          "Paid or still a prospect?",
+          "Owner email for form notifications.",
+          "Hours, if they need a check."
+        ]
+      },
+      {
+        id: "mammy",
+        name: "Mammy Frog’s",
+        also: "Diner",
+        status: "held",
+        price: "TBD. Deploy only when they buy.",
+        next: "Pitch / wait for the buy, then deploy to mammyfrogs.netlify.app.",
+        made: [
+          "Site is built and held. Netlify slug mammyfrogs is reserved."
+        ],
+        confirm: ["Price.", "When to pitch if it hasn’t been shown yet."]
+      },
+      {
+        id: "b3",
+        name: "B3 Beauty Company",
+        status: "held",
+        price: "TBD. Deploy only when they buy.",
+        next: "Pitch / wait for the buy, then deploy to b3beautycompany.netlify.app.",
+        made: [
+          "Site is built and held. Netlify slug is b3beautycompany (include “Company”)."
+        ],
+        confirm: ["Price.", "When to pitch if it hasn’t been shown yet."]
+      },
+      {
+        id: "black-label",
+        name: "Black Label Barbershop",
+        status: "confirm",
+        price: "TBD.",
+        next: "Confirm whether to pitch or leave it parked.",
+        made: [
+          "A site was built and is marked parked."
+        ],
+        confirm: ["Pitch or leave parked?", "Price if pitching."]
+      },
+      {
+        id: "hwy80",
+        name: "Highway 80 Body Shop",
+        area: "Russell Springs, KY",
+        status: "confirm",
+        price: "TBD. Optional $50 Christmas refresh / $75 Christmas + New Year — draft only, not sent.",
+        next: "Confirm whether the live site was sold and paid. Combined Highway 80 + G&S page is built but not live, and still needs photos.",
+        made: [
+          "Site is live.",
+          "An estimate app was built.",
+          "A combined Highway 80 + G&S Automart page exists but is not live."
+        ],
+        links: [
+          { label: "highway80bodyshop270.netlify.app", href: "https://highway80bodyshop270.netlify.app/" }
+        ],
+        confirm: ["Sold / paid, or still open?", "Whether to go live with the combined page."]
+      },
+      {
+        id: "gs",
+        name: "G&S Automart",
+        area: "Russell Springs, KY",
+        status: "confirm",
+        price: "TBD.",
+        next: "Confirm status with the shop. Finish photos and decide whether the combined Highway 80 + G&S page should go live.",
+        made: [
+          "A standalone site was built.",
+          "A combined Highway 80 Group page was built, not live. Photo slots are still placeholders."
+        ],
+        confirm: ["Live URL, if any.", "Sold / paid, or still a pitch?", "Real photos for the combined page."]
+      },
+      {
+        id: "bullpen",
+        name: "The Bullpen",
+        contact: "Kevin",
+        status: "confirm",
+        price: "TBD.",
+        next: "Confirm whether Kevin paid and if a follow-up is still needed.",
+        made: [
+          "Site is live.",
+          "Flyer, 2 QR codes, and 6 commercials were made."
+        ],
+        links: [
+          { label: "bullpen270.netlify.app", href: "https://bullpen270.netlify.app/" }
+        ],
+        confirm: ["Paid or still outstanding?", "Any remaining follow-up."]
+      },
+      {
+        id: "burtons-dd",
+        name: "Burton’s Boots n Bargains & Day & Day Feed Mill",
+        also: "Same owner — pitch as one sale",
+        status: "confirm",
+        price: "TBD. An earlier combined target of $60 was noted in a handoff — confirm, do not treat as a quote.",
+        next: "Confirm live URLs and whether this combined sale has been pitched or closed.",
+        made: [
+          "Commercial music is already done for both — no new songs needed.",
+          "Burton’s site was deployed around Nov 3; the live URL is not on file here."
+        ],
+        confirm: [
+          "Live URLs.",
+          "Sold / paid, or still a pitch?",
+          "Confirm Day & Day Feed Mill is the same “D&D” as that music work (see also D&D Used Cars below)."
+        ]
+      },
+      {
+        id: "dd-used",
+        name: "D&D Used Cars",
+        status: "confirm",
+        price: "TBD.",
+        next: "Confirm the live URL and whether this is a separate business from Day & Day Feed Mill.",
+        made: [
+          "A site was deployed around Nov 3. The live URL is not on file here."
+        ],
+        confirm: [
+          "Live URL.",
+          "Is this a different business from Day & Day Feed Mill?",
+          "Sold / paid, or still a pitch?"
+        ]
+      },
+      {
+        id: "lakeway",
+        name: "Lakeway Motor Sales",
+        status: "confirm",
+        price: "TBD.",
+        next: "Confirm whether this has been pitched or sold.",
+        made: [
+          "Commercial music is already done — no new song needed.",
+          "A site was built (v2, with a no-JavaScript fix). Live URL is not on file here."
+        ],
+        confirm: ["Live URL, if any.", "Pitched or sold?"]
+      },
+      {
+        id: "cloud-maker",
+        name: "Cloud Maker",
+        status: "confirm",
+        price: "TBD. A $60 package price was discussed for some prospects — confirm if this is one of them.",
+        next: "Confirm status and whether the site should be pitched or is already live.",
+        made: [
+          "A site was built, based on the Columbia Tobacco & Vape look, with Cloud Maker’s name, logo, info, and links. Background music was removed.",
+          "QR work has pointed to their Facebook page."
+        ],
+        confirm: ["Live URL, if any.", "Pitched or sold?", "Price."]
+      },
+      {
+        id: "lucky7",
+        name: "Lucky 7",
+        status: "confirm",
+        price: "TBD. A $60 package price was discussed for some prospects — confirm if this is one of them.",
+        next: "Confirm status and whether the site should be pitched or is already live.",
+        made: [
+          "A site was built, reworked from the Magic Liquor n Tobacco look and matched to Lucky 7. Background music was removed.",
+          "QR work has pointed to their Yelp page (no Facebook or website was on file)."
+        ],
+        confirm: ["Live URL, if any.", "Pitched or sold?", "Price."]
+      },
+      {
+        id: "crispy",
+        name: "Crispy Clean Tattoos",
+        contact: "Chris",
+        area: "Campbellsville, KY",
+        status: "confirm",
+        price: "TBD. This was discussed as likely a trade — confirm, do not assume.",
+        next: "Follow up with Chris. Confirm whether this is a trade or a paid job, and whether it has been delivered.",
+        made: [
+          "A commercial was made (the needle-stab cut transition one).",
+          "A site was built."
+        ],
+        confirm: ["Trade or paid?", "Delivered?", "Live URL, if any."]
+      },
+      {
+        id: "christmas-past",
+        name: "Christmas refresh — past clients",
+        also: "Draft offer only. Nothing has been sent.",
+        status: "idea",
+        price: "$50 Christmas refresh, or $75 for Christmas + New Year. Yes by Tue, Nov 24. Deliver by Thu, Dec 3.",
+        next: "If this round is a go, review the draft texts and send them one at a time after approval. Not started.",
+        made: [
+          "Draft texts are written and held. They have not been sent."
+        ],
+        notes: [
+          "Past clients on the draft list: Smokey’s Pipe Dreams, S.P.A.R.C. Recovery Center, The Appliance Store, Masons Auto Services, Jesse James Coffee and Cafe, Outsiders Ink, and Columbia Christian Church.",
+          "Also drafted (listed on their own cards too): Anchor, Dog Gone Classy / Thriller Miller Racing 46, Burton’s, Highway 80, and Betty’s (held because the original pitch is still pending)."
+        ],
+        confirm: ["Whether to send any of these this week."]
+      },
+      {
+        id: "drafts",
+        name: "Draft sites — not pitched yet",
+        also: "Antle’s Garage, Bird’s Whistle, Carnes Auto, Main Event, and others from the set-2 drafts",
+        status: "idea",
+        price: "TBD.",
+        next: "Confirm which of these, if any, should be pitched next.",
+        made: [
+          "Draft sites exist for Antle’s Garage, Bird’s Whistle, Carnes Auto, and Main Event, plus other set-2 work."
+        ],
+        confirm: ["Which drafts are real leads vs. just built ahead."]
+      }
+    ];
+
+    const IDEAS = [
+      {
+        title: "Holiday pack",
+        detail: "Flyers, QR codes, songs, and short videos, with a showcase page so the client can open everything on their phone. The Anchor Auto showcase is the working example.",
+        price: "The Dealer Solutions holiday set is being pitched at $40. Typical local range $40–$100, about $80 max."
+      },
+      {
+        title: "Showcase page",
+        detail: "One clean link with flyers, videos, jingles, and commercials. Easy to open while you’re on the phone with the client.",
+        price: "Usually bundled with a pack. Confirm if sold standalone."
+      },
+      {
+        title: "Jingles / 30-second commercial songs",
+        detail: "Original spots, including holiday versions of a song they already have.",
+        price: "Confirm per job. Christmas refresh draft offer is $50, or $75 for Christmas + New Year."
+      },
+      {
+        title: "QR flyers",
+        detail: "Printable flyers with a high-correction QR that stays scannable, often with a logo in the center.",
+        price: "Usually part of a pack. Confirm if sold standalone."
+      },
+      {
+        title: "On-hold audio",
+        detail: "A custom on-hold track, like the Anchor mic spot.",
+        price: "TBD — confirm before quoting."
+      },
+      {
+        title: "Radio spots",
+        detail: "Short radio audio, like the Anchor weatherman spot and Fall Deals work.",
+        price: "TBD — confirm before quoting."
+      },
+      {
+        title: "Website, held until they buy",
+        detail: "Build it, park the slug, and deploy when they say yes. Mammy Frog’s and B3 Beauty Company already work this way.",
+        price: "TBD — confirm before quoting. Typical local ceiling is about $80."
+      }
+    ];
+
+    const STATUS = {
+      done: "Paid / Done",
+      ready: "Ready to pitch",
+      progress: "In progress",
+      waiting: "Waiting on client",
+      held: "Held until purchase",
+      idea: "Idea",
+      confirm: "Confirm"
+    };
+
+    const filtersEl = document.getElementById("filters");
+    const cardsEl = document.getElementById("cards");
+    const nextEl = document.getElementById("next-list");
+    const ideasEl = document.getElementById("ideas");
+    let activeFilter = "all";
+
+    function esc(s) {
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    nextEl.innerHTML = NEXT_UP.map(item =>
+      `<li><strong>${esc(item.title)}</strong><span>${esc(item.detail)}</span></li>`
+    ).join("");
+
+    ideasEl.innerHTML = IDEAS.map(idea =>
+      `<article class="idea-card"><h3>${esc(idea.title)}</h3><p>${esc(idea.detail)}</p><span class="price">${esc(idea.price)}</span></article>`
+    ).join("");
+
+    const filterCounts = BUSINESSES.reduce((acc, b) => {
+      acc[b.status] = (acc[b.status] || 0) + 1;
+      return acc;
+    }, {});
+
+    const filterOrder = ["all", "ready", "progress", "waiting", "held", "idea", "confirm", "done"];
+    filtersEl.innerHTML = filterOrder.map(key => {
+      const label = key === "all" ? `All (${BUSINESSES.length})` : `${STATUS[key]} (${filterCounts[key] || 0})`;
+      return `<button type="button" data-filter="${key}" aria-pressed="${key === "all" ? "true" : "false"}">${esc(label)}</button>`;
+    }).join("");
+
+    filtersEl.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-filter]");
+      if (!btn) return;
+      activeFilter = btn.getAttribute("data-filter");
+      for (const b of filtersEl.querySelectorAll("button")) {
+        b.setAttribute("aria-pressed", b === btn ? "true" : "false");
+      }
+      renderCards();
+    });
+
+    function list(items, cls) {
+      if (!items || !items.length) return "";
+      return `<ul class="${cls}">${items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>`;
+    }
+
+    function thumbs(biz) {
+      if (!biz.images || !biz.images.length) return "";
+      const btns = biz.images.map((img, i) => `
+        <button type="button" data-open-img="${esc(biz.id)}:${i}" aria-label="${esc(img.alt || img.caption || "Open photo")}">
+          <img src="${esc(img.thumb || img.src)}" alt="${esc(img.alt || "")}">
+        </button>`).join("");
+      return `<p class="section-label">Photos</p><div class="thumbs">${btns}</div>`;
+    }
+
+    function renderCards() {
+      const rows = BUSINESSES.filter(b => activeFilter === "all" || b.status === activeFilter);
+      cardsEl.innerHTML = rows.map(b => `
+        <article class="card" id="${esc(b.id)}" data-status="${esc(b.status)}">
+          <div class="card-head">
+            <h2 class="biz-name">${esc(b.name)}</h2>
+            <div class="chips">
+              <span class="chip ${esc(b.status)}">${esc(STATUS[b.status])}</span>
+            </div>
+          </div>
+          ${b.nameNote ? `<p class="name-note">${esc(b.nameNote)}</p>` : ""}
+          ${b.also ? `<p class="also">${esc(b.also)}</p>` : ""}
+          <p class="meta">${[b.contact, b.area].filter(Boolean).map(esc).join(" · ")}</p>
+          <div class="key">
+            <p><strong>Price / what’s owed:</strong> ${esc(b.price)}</p>
+            <p><strong>Next step:</strong> ${esc(b.next)}</p>
+          </div>
+          ${b.pronounce ? `<p class="pronounce"><strong>Pronunciation:</strong> ${esc(b.pronounce)}</p>` : ""}
+          ${thumbs(b)}
+          ${b.made && b.made.length ? `<p class="section-label">What’s been made</p>${list(b.made, "made")}` : ""}
+          ${b.links && b.links.length ? `<p class="section-label">Links</p><div class="links">${b.links.map(l => `<a href="${esc(l.href)}" target="_blank" rel="noopener noreferrer">${esc(l.label)}</a>`).join("")}</div>` : ""}
+          ${b.notes && b.notes.length ? `<p class="section-label">Notes</p>${list(b.notes, "notes")}` : ""}
+          ${b.confirm && b.confirm.length ? `<p class="section-label">Confirm</p>${list(b.confirm, "confirms")}` : ""}
+        </article>
+      `).join("");
+    }
+
+    renderCards();
+
+    const lb = document.getElementById("lightbox");
+    const lbImg = document.getElementById("lb-img");
+    const lbCap = document.getElementById("lb-cap");
+    const lbClose = document.getElementById("lb-close");
+
+    function findImage(key) {
+      const [id, idx] = String(key).split(":");
+      const biz = BUSINESSES.find(b => b.id === id);
+      return biz && biz.images ? biz.images[Number(idx)] : null;
+    }
+
+    function openLightbox(img) {
+      if (!img) return;
+      lbImg.src = img.src;
+      lbImg.alt = img.alt || "";
+      lbCap.textContent = img.caption || "";
+      lb.hidden = false;
+      lb.classList.add("open");
+      document.body.classList.add("lb-open");
+      lbClose.focus();
+    }
+
+    function closeLightbox() {
+      lb.classList.remove("open");
+      lb.hidden = true;
+      document.body.classList.remove("lb-open");
+      lbImg.removeAttribute("src");
+    }
+
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-open-img]");
+      if (btn) {
+        openLightbox(findImage(btn.getAttribute("data-open-img")));
+        return;
+      }
+      if (e.target === lb || e.target === lbClose) closeLightbox();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && lb.classList.contains("open")) closeLightbox();
+    });
+  </script>
+</body>
+</html>
